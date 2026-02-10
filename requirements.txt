@@ -1,38 +1,5 @@
-# requirements.txt - Python dependencies for the project
-# Install with: pip install -r requirements.txt
-
-# Django Framework
-Django==4.2.0
-
-# Database (SQLite is built-in, but we list for clarity)
-# For PostgreSQL: psycopg2-binary==2.9.6
-
-# Environment variables management
-python-decouple==3.8
-
-# Image processing for profile pictures
-Pillow==9.5.0
-
-# Static file serving in production
-whitenoise==6.4.0
-
-# Production WSGI server
-gunicorn==21.2.0
-
-# Security headers
-django-csp==3.7
-
-# For future API development
-djangorestframework==3.14.0
-
-# For future user authentication enhancement
-django-allauth==0.54.0
-
-# Development tools (optional)
-ipython==8.12.0
-django-extensions==3.2.3
-django-debug-toolbar==4.0.0
-
-# Testing
-pytest==7.3.1
-pytest-django==4.5.2
+Django>=4.0,<5.0
+Pillow>=9.0
+django-crispy-forms>=1.14
+crispy-bootstrap5>=0.7
+python-dotenv>=0.20
