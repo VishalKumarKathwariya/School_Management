@@ -1,0 +1,351 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Enrollments - Student Management System{% endblock %}
+
+{% block content %}
+<div class="enrollments-list">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-clipboard-list text-primary"></i> Enrollment Management
+        </h1>
+        <div class="btn-group">
+            <a href="{% url 'enrollment_create' %}" class="btn btn-primary">
+                <i class="fas fa-user-graduate"></i> New Enrollment
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">
+                    <i class="fas fa-download"></i> Export Enrollments
+                </a></li>
+                <li><a class="dropdown-item" href="#">
+                    <i class="fas fa-print"></i> Print Report
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">
+                    <i class="fas fa-chart-bar"></i> View Analytics
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <select name="semester" class="form-select">
+                        <option value="">All Semesters</option>
+                        <option value="S1">Semester 1</option>
+                        <option value="S2">Semester 2</option>
+                        <option value="S3">Semester 3</option>
+                        <option value="S4">Semester 4</option>
+                        <option value="S5">Semester 5</option>
+                        <option value="S6">Semester 6</option>
+                        <option value="S7">Semester 7</option>
+                        <option value="S8">Semester 8</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" 
+                           name="academic_year" 
+                           class="form-control" 
+                           placeholder="Academic Year (e.g., 2023-2024)">
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Enrollments Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list"></i> All Enrollments
+                <span class="badge bg-primary ms-2">{{ enrollments|length }}</span>
+            </h5>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#helpModal">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>
+                                <input type="checkbox" class="form-check-input" id="select-all">
+                            </th>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Enrollment Date</th>
+                            <th>Semester</th>
+                            <th>Academic Year</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in enrollments %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="form-check-input enrollment-checkbox" 
+                                       value="{{ enrollment.id }}">
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if enrollment.student.profile_picture %}
+                                    <img src="{{ enrollment.student.profile_picture.url }}" 
+                                         alt="{{ enrollment.student.full_name }}" 
+                                         class="rounded-circle me-2" 
+                                         width="32" height="32">
+                                    {% else %}
+                                    <div class="avatar-placeholder rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        {{ enrollment.student.first_name|first }}{{ enrollment.student.last_name|first }}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ enrollment.student.full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ enrollment.student.student_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>{{ enrollment.course.course_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ enrollment.course.course_code }}</small>
+                            </td>
+                            <td>
+                                {{ enrollment.enrollment_date|date:"M d, Y" }}
+                                <br>
+                                <small class="text-muted">{{ enrollment.enrollment_date|timesince }} ago</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ enrollment.get_semester_display }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ enrollment.academic_year }}</span>
+                            </td>
+                            <td>
+                                {% if enrollment.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="#" class="btn btn-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                                    <h4>No Enrollments Found</h4>
+                                    <p class="text-muted">No students are enrolled in courses yet.</p>
+                                    <a href="{% url 'enrollment_create' %}" class="btn btn-primary">
+                                        <i class="fas fa-user-graduate"></i> Create First Enrollment
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Batch Actions -->
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="show-actions">
+                    <label class="form-check-label" for="show-actions">
+                        Select Multiple
+                    </label>
+                </div>
+                <div id="batch-actions" class="d-none">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-check"></i> Activate Selected
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-times"></i> Deactivate Selected
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i> Delete Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Total Enrollments</h6>
+                            <h3 class="card-title">{{ enrollments|length }}</h3>
+                        </div>
+                        <i class="fas fa-clipboard-list fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Active Enrollments</h6>
+                            <h3 class="card-title">
+                                {% with active=enrollments|dictsort:"is_active"|last %}
+                                    {{ active }}
+                                {% endwith %}
+                            </h3>
+                        </div>
+                        <i class="fas fa-user-check fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Current Semester</h6>
+                            <h3 class="card-title">S4</h3>
+                        </div>
+                        <i class="fas fa-calendar-alt fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">This Year</h6>
+                            <h3 class="card-title">2024</h3>
+                        </div>
+                        <i class="fas fa-calendar fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="fas fa-question-circle"></i> Enrollment Management Help
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>How to use this page:</h6>
+                <ul>
+                    <li>Click on <strong>New Enrollment</strong> to enroll a student in a course</li>
+                    <li>Use the <strong>filters</strong> to find specific enrollments</li>
+                    <li>Click on the <strong>eye icon</strong> to view enrollment details</li>
+                    <li>Click on the <strong>edit icon</strong> to modify an enrollment</li>
+                    <li>Click on the <strong>trash icon</strong> to delete an enrollment</li>
+                    <li>Select multiple enrollments using checkboxes for batch operations</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Deleting an enrollment will also delete associated grades.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary">
+                    <i class="fas fa-file-alt"></i> View Documentation
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Select all functionality
+    document.getElementById('select-all').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.enrollment-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        toggleBatchActions();
+    });
+    
+    // Individual checkbox change
+    document.querySelectorAll('.enrollment-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', toggleBatchActions);
+    });
+    
+    function toggleBatchActions() {
+        const anyChecked = Array.from(document.querySelectorAll('.enrollment-checkbox'))
+            .some(checkbox => checkbox.checked);
+        
+        const batchActions = document.getElementById('batch-actions');
+        if (anyChecked) {
+            batchActions.classList.remove('d-none');
+        } else {
+            batchActions.classList.add('d-none');
+        }
+    }
+    
+    // Show/hide actions
+    document.getElementById('show-actions').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.enrollment-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.style.display = this.checked ? 'block' : 'none';
+        });
+    });
+    
+    // Auto-select academic year
+    document.querySelector('input[name="academic_year"]').value = '2023-2024';
+</script>
+{% endblock %}

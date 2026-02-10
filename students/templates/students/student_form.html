@@ -1,0 +1,212 @@
+{% extends 'students/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ student|yesno:"Edit,Create" }} Student - Student Management System{% endblock %}
+
+{% block content %}
+<div class="student-form">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-user-edit text-primary"></i> 
+            {{ student|yesno:"Edit Student Profile,Create New Student" }}
+        </h1>
+        <a href="{% url 'student_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-info-circle"></i> Student Information
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Personal Information -->
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-user"></i> Personal Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.last_name|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.student_id|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.date_of_birth|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.gender|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.status|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        {{ form.email|as_crispy_field }}
+                        {{ form.phone|as_crispy_field }}
+                        {{ form.address|as_crispy_field }}
+                    </div>
+
+                    <!-- Additional Information -->
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-id-card"></i> Additional Information
+                        </h6>
+                        
+                        <!-- Profile Picture -->
+                        <div class="mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            {% if student and student.profile_picture %}
+                            <div class="mb-2">
+                                <img src="{{ student.profile_picture.url }}" 
+                                     alt="Current Profile Picture" 
+                                     class="img-thumbnail" 
+                                     width="150">
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           name="profile_picture-clear" 
+                                           id="profile_picture-clear_id">
+                                    <label class="form-check-label" for="profile_picture-clear_id">
+                                        Remove current picture
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <input type="file" 
+                                   name="profile_picture" 
+                                   class="form-control" 
+                                   accept="image/*" 
+                                   id="id_profile_picture">
+                            <div class="form-text">
+                                Recommended size: 300x300 pixels. Max file size: 2MB.
+                            </div>
+                        </div>
+
+                        <!-- Emergency Contact -->
+                        <h6 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="fas fa-phone-emergency"></i> Emergency Contact
+                        </h6>
+                        
+                        {{ form.emergency_contact_name|as_crispy_field }}
+                        {{ form.emergency_contact_phone|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'student_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 
+                                {{ student|yesno:"Update Student,Create Student" }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Preview Card -->
+    {% if student %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-eye"></i> Preview
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h4>{{ student.full_name }}</h4>
+                    <p class="text-muted">{{ student.student_id }}</p>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <p><strong>Email:</strong> {{ student.email }}</p>
+                            <p><strong>Phone:</strong> {{ student.phone }}</p>
+                            <p><strong>Status:</strong> 
+                                {% if student.status == 'A' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif student.status == 'I' %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% elif student.status == 'G' %}
+                                <span class="badge bg-info">Graduated</span>
+                                {% else %}
+                                <span class="badge bg-warning">Transferred</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Date of Birth:</strong> {{ student.date_of_birth|date:"M d, Y" }}</p>
+                            <p><strong>Age:</strong> {{ student.age }} years</p>
+                            <p><strong>Enrollment Date:</strong> {{ student.enrollment_date|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    {% if student.profile_picture %}
+                    <img src="{{ student.profile_picture.url }}" 
+                         alt="{{ student.full_name }}" 
+                         class="img-fluid rounded-circle" 
+                         style="max-width: 200px;">
+                    {% else %}
+                    <div class="avatar-placeholder rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto" 
+                         style="width: 200px; height: 200px; font-size: 3rem;">
+                        {{ student.first_name|first }}{{ student.last_name|first }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-format phone number
+    document.getElementById('id_phone').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 3 && value.length <= 6) {
+            value = value.replace(/(\d{3})(\d+)/, '$1-$2');
+        } else if (value.length > 6) {
+            value = value.replace(/(\d{3})(\d{3})(\d+)/, '$1-$2-$3');
+        }
+        e.target.value = value;
+    });
+
+    // Auto-format emergency contact phone
+    document.getElementById('id_emergency_contact_phone').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 3 && value.length <= 6) {
+            value = value.replace(/(\d{3})(\d+)/, '$1-$2');
+        } else if (value.length > 6) {
+            value = value.replace(/(\d{3})(\d{3})(\d+)/, '$1-$2-$3');
+        }
+        e.target.value = value;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,582 @@
+{% extends 'students/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ grade|yesno:"Edit,Add" }} Grade - Student Management System{% endblock %}
+
+{% block content %}
+<div class="grade-form">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-edit text-primary"></i> 
+            {{ grade|yesno:"Edit Grade,Add New Grade" }}
+        </h1>
+        <a href="{% url 'grade_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Grades
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Grade Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Enrollment Selection -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-user-graduate"></i> Select Enrollment
+                            </h6>
+                            {{ form.enrollment|as_crispy_field }}
+                            
+                            <!-- Enrollment Preview -->
+                            <div id="enrollment-preview" class="card bg-light mt-3" style="display: none;">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <h6 id="student-name">No enrollment selected</h6>
+                                            <p class="mb-1" id="course-name">Course: --</p>
+                                            <p class="mb-1" id="semester-info">Semester: --</p>
+                                            <p class="mb-0" id="academic-year">Academic Year: --</p>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div class="grade-indicator">
+                                                <span class="badge bg-secondary" id="current-grade">No Grade</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grade Details -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-chart-line"></i> Marks & Percentage
+                                </h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ form.marks_obtained|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.total_marks|as_crispy_field }}
+                                    </div>
+                                </div>
+                                
+                                <!-- Percentage Calculator -->
+                                <div class="card bg-light mt-3">
+                                    <div class="card-body">
+                                        <h6>Percentage Calculator</h6>
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text">Marks Obtained</span>
+                                            <input type="number" class="form-control" id="marks-obtained-input" 
+                                                   min="0" max="100" step="0.01">
+                                        </div>
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text">Total Marks</span>
+                                            <input type="number" class="form-control" id="total-marks-input" 
+                                                   value="100" min="1" max="1000">
+                                        </div>
+                                        <div class="input-group">
+                                            <span class="input-group-text">Percentage</span>
+                                            <input type="text" class="form-control" id="percentage-output" 
+                                                   readonly>
+                                        </div>
+                                        <small class="text-muted mt-2 d-block">
+                                            Enter marks to calculate percentage automatically
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-award"></i> Grade & Details
+                                </h6>
+                                
+                                {{ form.grade|as_crispy_field }}
+                                {{ form.exam_date|as_crispy_field }}
+                                {{ form.remarks|as_crispy_field }}
+                                
+                                <!-- Grade Preview -->
+                                <div class="card mt-3" id="grade-preview">
+                                    <div class="card-body text-center">
+                                        <div id="grade-letter" class="grade-letter-display">--</div>
+                                        <div id="grade-description" class="text-muted">No grade calculated</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'grade_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> 
+                                        {{ grade|yesno:"Update Grade,Save Grade" }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Grade Scale -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-balance-scale"></i> Grade Scale
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="grade-scale">
+                        <div class="grade-item grade-a">
+                            <span class="grade-letter">A</span>
+                            <span class="grade-range">90% - 100%</span>
+                            <span class="grade-desc">Excellent</span>
+                        </div>
+                        <div class="grade-item grade-b">
+                            <span class="grade-letter">B</span>
+                            <span class="grade-range">80% - 89%</span>
+                            <span class="grade-desc">Good</span>
+                        </div>
+                        <div class="grade-item grade-c">
+                            <span class="grade-letter">C</span>
+                            <span class="grade-range">70% - 79%</span>
+                            <span class="grade-desc">Satisfactory</span>
+                        </div>
+                        <div class="grade-item grade-d">
+                            <span class="grade-letter">D</span>
+                            <span class="grade-range">60% - 69%</span>
+                            <span class="grade-desc">Pass</span>
+                        </div>
+                        <div class="grade-item grade-e">
+                            <span class="grade-letter">E</span>
+                            <span class="grade-range">50% - 59%</span>
+                            <span class="grade-desc">Marginal</span>
+                        </div>
+                        <div class="grade-item grade-f">
+                            <span class="grade-letter">F</span>
+                            <span class="grade-range">Below 50%</span>
+                            <span class="grade-desc">Fail</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i> Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="stats-list">
+                        <div class="stat-item">
+                            <i class="fas fa-user-graduate text-primary"></i>
+                            <div class="stat-info">
+                                <div class="stat-value" id="student-count">--</div>
+                                <div class="stat-label">Student in Course</div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-chart-line text-success"></i>
+                            <div class="stat-info">
+                                <div class="stat-value" id="average-grade">--</div>
+                                <div class="stat-label">Average Grade</div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-percentage text-info"></i>
+                            <div class="stat-info">
+                                <div class="stat-value" id="pass-rate">--</div>
+                                <div class="stat-label">Pass Rate</div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-trophy text-warning"></i>
+                            <div class="stat-info">
+                                <div class="stat-value" id="top-grade">--</div>
+                                <div class="stat-label">Top Grade</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6><i class="fas fa-question-circle"></i> Need Help?</h6>
+                    <p class="small">
+                        Grades are automatically calculated based on the percentage.
+                        Enter marks obtained and total marks to see the calculated grade.
+                    </p>
+                    <button class="btn btn-sm btn-outline-info w-100" data-bs-toggle="modal" data-bs-target="#helpModal">
+                        <i class="fas fa-info-circle"></i> View Help Guide
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="fas fa-question-circle"></i> Grade Entry Help
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>How to enter grades:</h6>
+                <ol>
+                    <li>Select the student enrollment from the dropdown</li>
+                    <li>Enter marks obtained (e.g., 85)</li>
+                    <li>Enter total marks (default is 100)</li>
+                    <li>The grade will be automatically calculated based on percentage</li>
+                    <li>You can override the calculated grade if needed</li>
+                    <li>Add any remarks in the remarks field</li>
+                    <li>Click Save Grade to record the grade</li>
+                </ol>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Important:</strong> Once saved, grades can only be edited by administrators.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.grade-indicator {
+    font-size: 1.5rem;
+}
+
+.grade-scale {
+    margin: -0.5rem;
+}
+
+.grade-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid;
+}
+
+.grade-item:last-child {
+    margin-bottom: 0;
+}
+
+.grade-a {
+    background-color: rgba(28, 200, 138, 0.1);
+    border-left-color: #1cc88a;
+}
+
+.grade-b {
+    background-color: rgba(54, 185, 204, 0.1);
+    border-left-color: #36b9cc;
+}
+
+.grade-c {
+    background-color: rgba(78, 115, 223, 0.1);
+    border-left-color: #4e73df;
+}
+
+.grade-d {
+    background-color: rgba(246, 194, 62, 0.1);
+    border-left-color: #f6c23e;
+}
+
+.grade-e {
+    background-color: rgba(253, 126, 20, 0.1);
+    border-left-color: #fd7e14;
+}
+
+.grade-f {
+    background-color: rgba(231, 74, 59, 0.1);
+    border-left-color: #e74a3b;
+}
+
+.grade-letter {
+    width: 40px;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.grade-range {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.grade-desc {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.stats-list {
+    margin: -0.5rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-item i {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #5a5c69;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #858796;
+}
+
+.grade-letter-display {
+    font-size: 4rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+#grade-preview.grade-a .grade-letter-display {
+    color: #1cc88a;
+}
+
+#grade-preview.grade-b .grade-letter-display {
+    color: #36b9cc;
+}
+
+#grade-preview.grade-c .grade-letter-display {
+    color: #4e73df;
+}
+
+#grade-preview.grade-d .grade-letter-display {
+    color: #f6c23e;
+}
+
+#grade-preview.grade-e .grade-letter-display {
+    color: #fd7e14;
+}
+
+#grade-preview.grade-f .grade-letter-display {
+    color: #e74a3b;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Grade calculation
+const marksInput = document.getElementById('id_marks_obtained');
+const totalMarksInput = document.getElementById('id_total_marks');
+const gradeSelect = document.getElementById('id_grade');
+const gradePreview = document.getElementById('grade-preview');
+const gradeLetterDisplay = document.getElementById('grade-letter');
+const gradeDescription = document.getElementById('grade-description');
+
+// Calculator inputs
+const marksCalculator = document.getElementById('marks-obtained-input');
+const totalMarksCalculator = document.getElementById('total-marks-input');
+const percentageOutput = document.getElementById('percentage-output');
+
+// Calculate percentage
+function calculatePercentage(marks, total) {
+    if (total > 0) {
+        return (marks / total) * 100;
+    }
+    return 0;
+}
+
+// Determine grade from percentage
+function determineGrade(percentage) {
+    if (percentage >= 90) return 'A';
+    if (percentage >= 80) return 'B';
+    if (percentage >= 70) return 'C';
+    if (percentage >= 60) return 'D';
+    if (percentage >= 50) return 'E';
+    return 'F';
+}
+
+// Get grade description
+function getGradeDescription(grade) {
+    const descriptions = {
+        'A': 'Excellent (90-100%)',
+        'B': 'Good (80-89%)',
+        'C': 'Satisfactory (70-79%)',
+        'D': 'Pass (60-69%)',
+        'E': 'Marginal (50-59%)',
+        'F': 'Fail (Below 50%)'
+    };
+    return descriptions[grade] || 'No grade';
+}
+
+// Update grade display
+function updateGradeDisplay(percentage) {
+    const grade = determineGrade(percentage);
+    const description = getGradeDescription(grade);
+    
+    // Update preview
+    gradeLetterDisplay.textContent = grade;
+    gradeDescription.textContent = description;
+    
+    // Update select
+    gradeSelect.value = grade;
+    
+    // Update preview colors
+    gradePreview.className = 'card mt-3 grade-' + grade.toLowerCase();
+    
+    // Update calculator
+    percentageOutput.value = percentage.toFixed(2) + '%';
+}
+
+// Event listeners for auto-calculation
+function setupGradeCalculation() {
+    // Form field listeners
+    [marksInput, totalMarksInput].forEach(input => {
+        input.addEventListener('input', function() {
+            const marks = parseFloat(marksInput.value) || 0;
+            const total = parseFloat(totalMarksInput.value) || 100;
+            const percentage = calculatePercentage(marks, total);
+            updateGradeDisplay(percentage);
+            
+            // Sync with calculator
+            marksCalculator.value = marks;
+            totalMarksCalculator.value = total;
+        });
+    });
+    
+    // Calculator listeners
+    [marksCalculator, totalMarksCalculator].forEach(input => {
+        input.addEventListener('input', function() {
+            const marks = parseFloat(marksCalculator.value) || 0;
+            const total = parseFloat(totalMarksCalculator.value) || 100;
+            const percentage = calculatePercentage(marks, total);
+            
+            // Update form fields
+            marksInput.value = marks;
+            totalMarksInput.value = total;
+            
+            updateGradeDisplay(percentage);
+        });
+    });
+    
+    // Initialize with current values
+    const marks = parseFloat(marksInput.value) || 0;
+    const total = parseFloat(totalMarksInput.value) || 100;
+    const percentage = calculatePercentage(marks, total);
+    updateGradeDisplay(percentage);
+}
+
+// Enrollment preview
+const enrollmentSelect = document.getElementById('id_enrollment');
+const enrollmentPreview = document.getElementById('enrollment-preview');
+const studentName = document.getElementById('student-name');
+const courseName = document.getElementById('course-name');
+const semesterInfo = document.getElementById('semester-info');
+const academicYear = document.getElementById('academic-year');
+const currentGrade = document.getElementById('current-grade');
+
+enrollmentSelect.addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const text = selectedOption.text;
+    
+    if (text && text !== '---------') {
+        // Parse the enrollment text
+        const parts = text.split(' - ');
+        if (parts.length >= 3) {
+            studentName.textContent = parts[0];
+            courseName.textContent = `Course: ${parts[1]}`;
+            semesterInfo.textContent = `Semester: ${parts[2]}`;
+            academicYear.textContent = `Academic Year: ${selectedOption.dataset.year || '--'}`;
+            
+            // Show existing grade if any
+            currentGrade.textContent = selectedOption.dataset.grade || 'No Grade';
+            currentGrade.className = `badge bg-${selectedOption.dataset.grade ? 'info' : 'secondary'}`;
+            
+            enrollmentPreview.style.display = 'block';
+            
+            // Update stats
+            updateStats(selectedOption.value);
+        }
+    } else {
+        enrollmentPreview.style.display = 'none';
+    }
+});
+
+// Update statistics
+function updateStats(enrollmentId) {
+    // In a real application, you would fetch this data via AJAX
+    // For now, we'll use dummy data
+    document.getElementById('student-count').textContent = '45';
+    document.getElementById('average-grade').textContent = 'B+';
+    document.getElementById('pass-rate').textContent = '92%';
+    document.getElementById('top-grade').textContent = 'A';
+}
+
+// Auto-set exam date to today
+const examDateField = document.getElementById('id_exam_date');
+if (examDateField) {
+    const today = new Date().toISOString().split('T')[0];
+    examDateField.value = today;
+}
+
+// Initialize on page load
+setupGradeCalculation();
+
+// Load enrollment data
+{% for enrollment in enrollments %}
+const option = document.querySelector(`#id_enrollment option[value="{{ enrollment.id }}"]`);
+if (option) {
+    option.dataset.year = "{{ enrollment.academic_year }}";
+    // Add grade data if exists
+    {% if enrollment.grades.first %}
+    option.dataset.grade = "{{ enrollment.grades.first.grade }}";
+    {% endif %}
+}
+{% endfor %}
+</script>
+{% endblock %}

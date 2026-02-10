@@ -1,0 +1,181 @@
+{% extends 'students/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ course|yesno:"Edit,Create" }} Course - Student Management System{% endblock %}
+
+{% block content %}
+<div class="course-form">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-book text-primary"></i> 
+            {{ course|yesno:"Edit Course,Create New Course" }}
+        </h1>
+        <a href="{% url 'course_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Courses
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-info-circle"></i> Course Information
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Basic Information -->
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-book"></i> Basic Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.course_code|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.course_name|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        {{ form.description|as_crispy_field }}
+                    </div>
+
+                    <!-- Course Details -->
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-cogs"></i> Course Details
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form.credits|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.level|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.duration_months|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                {{ form.fee|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.is_active|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'course_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 
+                                {{ course|yesno:"Update Course,Create Course" }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Course Stats Preview -->
+    {% if course %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-chart-bar"></i> Course Statistics
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="card-subtitle mb-2 text-muted">Total Enrollments</h6>
+                            <h3 class="card-title text-primary">{{ course.enrollments.count }}</h3>
+                            <p class="card-text">Active Students</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="card-subtitle mb-2 text-muted">Course Duration</h6>
+                            <h3 class="card-title text-success">{{ course.duration_months }}</h3>
+                            <p class="card-text">Months</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="card-subtitle mb-2 text-muted">Course Fee</h6>
+                            <h3 class="card-title text-info">${{ course.fee }}</h3>
+                            <p class="card-text">Total Fee</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Course Description -->
+            <div class="mt-4">
+                <h6>Course Description:</h6>
+                <p>{{ course.description }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Format currency input
+    document.getElementById('id_fee').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/[^0-9.]/g, '');
+        if (value.includes('.')) {
+            let parts = value.split('.');
+            if (parts[1].length > 2) {
+                parts[1] = parts[1].substring(0, 2);
+            }
+            value = parts[0] + '.' + parts[1];
+        }
+        e.target.value = value;
+    });
+    
+    // Auto-generate course code suggestion
+    document.getElementById('id_course_name').addEventListener('blur', function(e) {
+        const courseName = e.target.value;
+        const courseCodeField = document.getElementById('id_course_code');
+        
+        if (courseName && !courseCodeField.value) {
+            // Generate course code from course name
+            let code = courseName.toUpperCase().substring(0, 3);
+            code += Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            courseCodeField.value = code;
+        }
+    });
+    
+    // Validate credits
+    document.getElementById('id_credits').addEventListener('blur', function(e) {
+        const credits = parseInt(e.target.value);
+        if (credits < 1 || credits > 30) {
+            alert('Credits must be between 1 and 30');
+            e.target.focus();
+        }
+    });
+</script>
+{% endblock %}

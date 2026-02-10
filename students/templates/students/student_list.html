@@ -1,0 +1,174 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Students - Student Management System{% endblock %}
+
+{% block content %}
+<div class="students-list">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-users text-primary"></i> Students Management
+        </h1>
+        <a href="{% url 'student_create' %}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Add New Student
+        </a>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    {{ search_form.query }}
+                </div>
+                <div class="col-md-4">
+                    {{ search_form.status }}
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Students List ({{ total_students }} found)</h5>
+            <span class="badge bg-primary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Profile</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Enrollment Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in page_obj %}
+                        <tr>
+                            <td>
+                                <strong class="text-primary">{{ student.student_id }}</strong>
+                            </td>
+                            <td>
+                                {% if student.profile_picture %}
+                                <img src="{{ student.profile_picture.url }}" alt="{{ student.full_name }}" 
+                                     class="rounded-circle" width="40" height="40">
+                                {% else %}
+                                <div class="avatar-placeholder rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                     style="width: 40px; height: 40px;">
+                                    {{ student.first_name|first }}{{ student.last_name|first }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ student.full_name }}</strong>
+                                <br>
+                                <small class="text-muted">Age: {{ student.age }}</small>
+                            </td>
+                            <td>{{ student.email }}</td>
+                            <td>{{ student.phone }}</td>
+                            <td>
+                                {% if student.status == 'A' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif student.status == 'I' %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% elif student.status == 'G' %}
+                                <span class="badge bg-info">Graduated</span>
+                                {% else %}
+                                <span class="badge bg-warning">Transferred</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ student.enrollment_date|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'student_detail' student.pk %}" 
+                                       class="btn btn-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'student_update' student.pk %}" 
+                                       class="btn btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'student_delete' student.pk %}" 
+                                       class="btn btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <h4>No students found</h4>
+                                    <p class="text-muted">No students match your search criteria.</p>
+                                    <a href="{% url 'student_create' %}" class="btn btn-primary">
+                                        <i class="fas fa-user-plus"></i> Add First Student
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Dashboard - Student Management System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/students/css/dashboard.css">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Total Students</h6>
+                            <h2 class="card-title">{{ total_students }}</h2>
+                        </div>
+                        <i class="fas fa-users fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Active Students</h6>
+                            <h2 class="card-title">{{ active_students }}</h2>
+                        </div>
+                        <i class="fas fa-user-check fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Total Courses</h6>
+                            <h2 class="card-title">{{ total_courses }}</h2>
+                        </div>
+                        <i class="fas fa-book fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Enrollments</h6>
+                            <h2 class="card-title">{{ total_enrollments }}</h2>
+                        </div>
+                        <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities and Statistics -->
+    <div class="row">
+        <!-- Recent Enrollments -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history"></i> Recent Enrollments
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Course</th>
+                                    <th>Enrollment Date</th>
+                                    <th>Semester</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for enrollment in recent_enrollments %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ enrollment.student.full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ enrollment.student.student_id }}</small>
+                                    </td>
+                                    <td>{{ enrollment.course.course_name }}</td>
+                                    <td>{{ enrollment.enrollment_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ enrollment.get_semester_display }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No recent enrollments</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="col-md-4">
+            <!-- Gender Distribution -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-venus-mars"></i> Gender Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for item in gender_distribution %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ item.get_gender_display }}
+                            <span class="badge bg-primary rounded-pill">{{ item.count }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Popular Courses -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line"></i> Popular Courses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for course in course_popularity %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ course.course_code }}</strong>
+                                <br>
+                                <small class="text-muted">{{ course.course_name|truncatechars:30 }}</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill">{{ course.enrollment_count }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'student_create' %}" class="btn btn-primary w-100">
+                                <i class="fas fa-user-plus"></i> Add New Student
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'course_create' %}" class="btn btn-success w-100">
+                                <i class="fas fa-plus-circle"></i> Create Course
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'enrollment_create' %}" class="btn btn-info w-100">
+                                <i class="fas fa-user-graduate"></i> New Enrollment
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'grade_create' %}" class="btn btn-warning w-100">
+                                <i class="fas fa-edit"></i> Add Grades
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,475 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Courses - Student Management System{% endblock %}
+
+{% block content %}
+<div class="courses-list">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-book text-primary"></i> Course Management
+        </h1>
+        <div class="btn-group">
+            <a href="{% url 'course_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Create New Course
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">
+                    <i class="fas fa-file-import"></i> Import Courses
+                </a></li>
+                <li><a class="dropdown-item" href="#">
+                    <i class="fas fa-file-export"></i> Export Courses
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">
+                    <i class="fas fa-chart-bar"></i> Course Analytics
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Search courses...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select">
+                        <option value="">All Levels</option>
+                        <option value="UG">Undergraduate</option>
+                        <option value="PG">Postgraduate</option>
+                        <option value="DP">Diploma</option>
+                        <option value="CR">Certificate</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Courses Grid View -->
+    <div class="row mb-4">
+        {% for course in courses %}
+        <div class="col-md-4 mb-4">
+            <div class="card course-card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="badge bg-{{ course.is_active|yesno:'success,danger' }}">
+                        {{ course.is_active|yesno:'Active,Inactive' }}
+                    </span>
+                    <span class="badge bg-info">{{ course.get_level_display }}</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ course.course_code }}</h5>
+                    <h6 class="card-subtitle mb-3 text-muted">{{ course.course_name }}</h6>
+                    <p class="card-text">{{ course.description|truncatechars:100 }}</p>
+                    
+                    <div class="course-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ course.duration_months }} months</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-credit-card"></i>
+                            <span>${{ course.fee }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>{{ course.credits }} credits</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100" role="group">
+                        <a href="#" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="#" class="btn btn-sm btn-outline-warning">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="#" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-book fa-4x text-muted mb-4"></i>
+                    <h4>No Courses Found</h4>
+                    <p class="text-muted mb-4">You haven't created any courses yet.</p>
+                    <a href="{% url 'course_create' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle"></i> Create Your First Course
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Courses Table View (Alternative) -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-table"></i> All Courses (Table View)
+            </h5>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="toggleView">
+                <label class="form-check-label" for="toggleView">Grid View</label>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Course Name</th>
+                            <th>Credits</th>
+                            <th>Level</th>
+                            <th>Duration</th>
+                            <th>Fee</th>
+                            <th>Enrollments</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>
+                                <strong>{{ course.course_code }}</strong>
+                            </td>
+                            <td>
+                                <strong>{{ course.course_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ course.description|truncatechars:50 }}</small>
+                            </td>
+                            <td>{{ course.credits }}</td>
+                            <td>{{ course.get_level_display }}</td>
+                            <td>{{ course.duration_months }} months</td>
+                            <td>${{ course.fee }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ course.enrollments.count }}</span>
+                            </td>
+                            <td>
+                                {% if course.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="#" class="btn btn-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-success" title="Enroll Students">
+                                        <i class="fas fa-user-plus"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i> Course Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-primary">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{ courses|length }}</h3>
+                                    <p>Total Courses</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-success">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{ courses|dictsort:"is_active"|last }}</h3>
+                                    <p>Active Courses</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-info">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>0</h3>
+                                    <p>Total Enrollments</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-warning">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>$0</h3>
+                                    <p>Total Course Fees</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions Modal -->
+<div class="modal fade" id="quickActionsModal" tabindex="-1" aria-labelledby="quickActionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickActionsModalLabel">
+                    <i class="fas fa-bolt"></i> Quick Actions
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{% url 'course_create' %}" class="btn btn-primary w-100 h-100 py-3">
+                            <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                            <br>
+                            Create Course
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-success w-100 h-100 py-3">
+                            <i class="fas fa-file-import fa-2x mb-2"></i>
+                            <br>
+                            Import Courses
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-info w-100 h-100 py-3">
+                            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                            <br>
+                            View Analytics
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-warning w-100 h-100 py-3">
+                            <i class="fas fa-print fa-2x mb-2"></i>
+                            <br>
+                            Print Catalog
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.course-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e3e6f0;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.course-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e3e6f0;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.meta-item i {
+    color: #4e73df;
+    margin-bottom: 0.25rem;
+}
+
+.meta-item span {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e3e6f0;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #5a5c69;
+}
+
+.stat-info p {
+    margin: 0;
+    color: #858796;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle between grid and table view
+const toggleView = document.getElementById('toggleView');
+const gridView = document.querySelector('.row.mb-4');
+const tableView = document.querySelector('.table-responsive');
+
+toggleView.addEventListener('change', function() {
+    if (this.checked) {
+        gridView.style.display = 'flex';
+        tableView.parentElement.parentElement.style.display = 'none';
+    } else {
+        gridView.style.display = 'none';
+        tableView.parentElement.parentElement.style.display = 'block';
+    }
+});
+
+// Search functionality
+const searchInput = document.querySelector('input[type="text"]');
+searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const cards = document.querySelectorAll('.course-card');
+    const rows = document.querySelectorAll('tbody tr');
+    
+    // Search in grid view
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.parentElement.style.display = text.includes(searchTerm) ? 'block' : 'none';
+    });
+    
+    // Search in table view
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Filter by level
+document.querySelectorAll('select').forEach(select => {
+    select.addEventListener('change', function() {
+        const level = this.value;
+        const cards = document.querySelectorAll('.course-card');
+        const rows = document.querySelectorAll('tbody tr');
+        
+        if (!level) {
+            cards.forEach(card => card.parentElement.style.display = 'block');
+            rows.forEach(row => row.style.display = '');
+            return;
+        }
+        
+        // Filter in grid view
+        cards.forEach(card => {
+            const badge = card.querySelector('.badge.bg-info');
+            const cardLevel = badge ? badge.textContent.trim() : '';
+            card.parentElement.style.display = cardLevel.includes(level) ? 'block' : 'none';
+        });
+        
+        // Filter in table view
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const rowLevel = cells[3] ? cells[3].textContent.trim() : '';
+            row.style.display = rowLevel.includes(level) ? '' : 'none';
+        });
+    });
+});
+
+// Course status toggle
+document.querySelectorAll('.course-card .btn-outline-warning').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const card = this.closest('.course-card');
+        const badge = card.querySelector('.badge');
+        const isActive = badge.classList.contains('bg-success');
+        
+        if (confirm(`Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this course?`)) {
+            // In a real application, make an AJAX request here
+            badge.textContent = isActive ? 'Inactive' : 'Active';
+            badge.className = `badge bg-${isActive ? 'danger' : 'success'}`;
+            
+            // Show success message
+            alert(`Course ${isActive ? 'deactivated' : 'activated'} successfully!`);
+        }
+    });
+});
+</script>
+{% endblock %}

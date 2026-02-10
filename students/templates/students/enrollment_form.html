@@ -1,0 +1,346 @@
+{% extends 'students/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ enrollment|yesno:"Edit,Create" }} Enrollment - Student Management System{% endblock %}
+
+{% block content %}
+<div class="enrollment-form">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-user-graduate text-primary"></i> 
+            {{ enrollment|yesno:"Edit Enrollment,Create New Enrollment" }}
+        </h1>
+        <a href="{% url 'enrollment_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Enrollments
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Enrollment Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-user"></i> Student Information
+                                </h6>
+                                {{ form.student|as_crispy_field }}
+                                
+                                <!-- Student Preview -->
+                                <div id="student-preview" class="card bg-light mt-3" style="display: none;">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3 text-center">
+                                                <div class="avatar-placeholder rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto" 
+                                                     style="width: 60px; height: 60px; font-size: 1.2rem;">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <h6 id="student-name">No student selected</h6>
+                                                <p class="mb-1" id="student-id">ID: --</p>
+                                                <p class="mb-0" id="student-email">Email: --</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-book"></i> Course Information
+                                </h6>
+                                {{ form.course|as_crispy_field }}
+                                
+                                <!-- Course Preview -->
+                                <div id="course-preview" class="card bg-light mt-3" style="display: none;">
+                                    <div class="card-body">
+                                        <h6 id="course-name">No course selected</h6>
+                                        <p class="mb-1" id="course-code">Code: --</p>
+                                        <p class="mb-0">
+                                            <span id="course-duration">Duration: -- months</span> • 
+                                            <span id="course-fee">Fee: $--</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-calendar"></i> Academic Details
+                                </h6>
+                                {{ form.semester|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-calendar-alt"></i> Academic Year
+                                </h6>
+                                {{ form.academic_year|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-toggle-on"></i> Status
+                                </h6>
+                                {{ form.is_active|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'enrollment_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> 
+                                        {{ enrollment|yesno:"Update Enrollment,Create Enrollment" }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="col-md-4">
+            <!-- Quick Stats -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i> Quick Stats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Enrollments
+                            <span class="badge bg-primary rounded-pill">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Active This Semester
+                            <span class="badge bg-success rounded-pill">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Students in Selected Course
+                            <span class="badge bg-info rounded-pill">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Course Capacity
+                            <span class="badge bg-warning rounded-pill">0/50</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-question-circle"></i> Help & Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-lightbulb"></i> Tips:</h6>
+                        <ul class="mb-0">
+                            <li>Ensure the student is not already enrolled in the same course for the same semester</li>
+                            <li>Check if the student has any outstanding fees before enrolling</li>
+                            <li>Verify the course capacity before enrollment</li>
+                            <li>Set the correct academic year (e.g., 2023-2024)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Important:</h6>
+                        <p class="mb-0">
+                            Once enrolled, the student can be assigned grades for this course.
+                            Deleting an enrollment will also delete all associated grades.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Validation Rules -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-clipboard-check"></i> Validation Rules
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="validation-item">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <strong>Student Eligibility</strong>
+                        <p class="mb-0">Student must be active and not suspended</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="validation-item">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <strong>Course Availability</strong>
+                        <p class="mb-0">Course must be active and have available seats</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="validation-item">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <strong>No Duplicate Enrollment</strong>
+                        <p class="mb-0">Student cannot be enrolled twice in same course/semester</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Student selection preview
+    const studentSelect = document.getElementById('id_student');
+    const studentPreview = document.getElementById('student-preview');
+    const studentName = document.getElementById('student-name');
+    const studentId = document.getElementById('student-id');
+    const studentEmail = document.getElementById('student-email');
+    const studentAvatar = studentPreview.querySelector('.avatar-placeholder');
+    
+    studentSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const studentData = selectedOption.text.split(' - ');
+        
+        if (studentData.length > 1) {
+            studentName.textContent = studentData[1];
+            studentId.textContent = `ID: ${studentData[0]}`;
+            studentEmail.textContent = `Email: ${selectedOption.dataset.email || '--'}`;
+            
+            // Update avatar
+            const initials = studentData[1].split(' ').map(n => n[0]).join('');
+            studentAvatar.textContent = initials;
+            
+            studentPreview.style.display = 'block';
+        } else {
+            studentPreview.style.display = 'none';
+        }
+    });
+    
+    // Course selection preview
+    const courseSelect = document.getElementById('id_course');
+    const coursePreview = document.getElementById('course-preview');
+    const courseName = document.getElementById('course-name');
+    const courseCode = document.getElementById('course-code');
+    const courseDuration = document.getElementById('course-duration');
+    const courseFee = document.getElementById('course-fee');
+    
+    courseSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const courseData = selectedOption.text.split(' - ');
+        
+        if (courseData.length > 1) {
+            courseName.textContent = courseData[1];
+            courseCode.textContent = `Code: ${courseData[0]}`;
+            courseDuration.textContent = `Duration: ${selectedOption.dataset.duration || '--'} months`;
+            courseFee.textContent = `Fee: $${selectedOption.dataset.fee || '--'}`;
+            
+            coursePreview.style.display = 'block';
+        } else {
+            coursePreview.style.display = 'none';
+        }
+    });
+    
+    // Auto-set academic year
+    const academicYearField = document.getElementById('id_academic_year');
+    const currentYear = new Date().getFullYear();
+    academicYearField.value = `${currentYear}-${currentYear + 1}`;
+    
+    // Auto-set enrollment date to today
+    const enrollmentDateField = document.getElementById('id_enrollment_date');
+    if (enrollmentDateField) {
+        const today = new Date().toISOString().split('T')[0];
+        enrollmentDateField.value = today;
+    }
+    
+    // Validation: Check for duplicate enrollment
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const student = studentSelect.value;
+        const course = courseSelect.value;
+        const semester = document.getElementById('id_semester').value;
+        const academicYear = academicYearField.value;
+        
+        if (student && course && semester && academicYear) {
+            // In a real application, you would make an AJAX call here
+            // to check for duplicate enrollment on the server
+            console.log('Checking for duplicate enrollment...');
+        }
+    });
+    
+    // Fetch student and course data for options
+    function loadStudentData() {
+        // In a real application, you would fetch this data via AJAX
+        // For now, we'll add data attributes to the options
+        {% for student in students %}
+        const option = document.querySelector(`#id_student option[value="{{ student.id }}"]`);
+        if (option) {
+            option.dataset.email = "{{ student.email }}";
+        }
+        {% endfor %}
+    }
+    
+    function loadCourseData() {
+        {% for course in courses %}
+        const option = document.querySelector(`#id_course option[value="{{ course.id }}"]`);
+        if (option) {
+            option.dataset.duration = "{{ course.duration_months }}";
+            option.dataset.fee = "{{ course.fee }}";
+        }
+        {% endfor %}
+    }
+    
+    // Initialize on page load
+    loadStudentData();
+    loadCourseData();
+</script>
+
+<style>
+.validation-item {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+    height: 100%;
+}
+
+.validation-item i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.validation-item strong {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.validation-item p {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,694 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Grades - Student Management System{% endblock %}
+
+{% block content %}
+<div class="grades-list">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-chart-bar text-primary"></i> Grade Management
+        </h1>
+        <div class="btn-group">
+            <a href="{% url 'grade_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Grade
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">
+                    <i class="fas fa-upload"></i> Import Grades
+                </a></li>
+                <li><a class="dropdown-item" href="#">
+                    <i class="fas fa-download"></i> Export Grades
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">
+                    <i class="fas fa-chart-line"></i> Grade Analytics
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Filters and Actions -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- Search -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Search by student or course...">
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="col-md-8">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <select class="form-select">
+                                <option>All Semesters</option>
+                                <option>Semester 1</option>
+                                <option>Semester 2</option>
+                                <option>Semester 3</option>
+                                <option>Semester 4</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select">
+                                <option>All Grades</option>
+                                <option>A</option>
+                                <option>B</option>
+                                <option>C</option>
+                                <option>D</option>
+                                <option>E</option>
+                                <option>F</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" placeholder="Academic Year">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grades Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-table"></i> Grade Records
+            </h5>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#gradeScaleModal">
+                    <i class="fas fa-balance-scale"></i> Grade Scale
+                </button>
+                <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#statisticsModal">
+                    <i class="fas fa-chart-pie"></i> Statistics
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Marks</th>
+                            <th>Percentage</th>
+                            <th>Grade</th>
+                            <th>Exam Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grade in grades %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if grade.enrollment.student.profile_picture %}
+                                    <img src="{{ grade.enrollment.student.profile_picture.url }}" 
+                                         alt="{{ grade.enrollment.student.full_name }}" 
+                                         class="rounded-circle me-2" 
+                                         width="32" height="32">
+                                    {% else %}
+                                    <div class="avatar-placeholder rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        {{ grade.enrollment.student.first_name|first }}{{ grade.enrollment.student.last_name|first }}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ grade.enrollment.student.full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ grade.enrollment.student.student_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>{{ grade.enrollment.course.course_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ grade.enrollment.course.course_code }}</small>
+                                <br>
+                                <small class="badge bg-info">{{ grade.enrollment.get_semester_display }}</small>
+                            </td>
+                            <td>
+                                <strong>{{ grade.marks_obtained }} / {{ grade.total_marks }}</strong>
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    {% with percentage=grade.percentage %}
+                                    <div class="progress-bar 
+                                        {% if percentage >= 90 %}bg-success
+                                        {% elif percentage >= 80 %}bg-info
+                                        {% elif percentage >= 70 %}bg-primary
+                                        {% elif percentage >= 60 %}bg-warning
+                                        {% else %}bg-danger{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ percentage }}%"
+                                        aria-valuenow="{{ percentage }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                        {{ percentage|floatformat:1 }}%
+                                    </div>
+                                    {% endwith %}
+                                </div>
+                            </td>
+                            <td>
+                                {% with grade_letter=grade.grade %}
+                                {% if grade_letter == 'A' %}
+                                <span class="badge bg-success fs-6">A</span>
+                                {% elif grade_letter == 'B' %}
+                                <span class="badge bg-info fs-6">B</span>
+                                {% elif grade_letter == 'C' %}
+                                <span class="badge bg-primary fs-6">C</span>
+                                {% elif grade_letter == 'D' %}
+                                <span class="badge bg-warning fs-6">D</span>
+                                {% elif grade_letter == 'E' %}
+                                <span class="badge bg-orange text-white fs-6">E</span>
+                                {% else %}
+                                <span class="badge bg-danger fs-6">F</span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                {{ grade.exam_date|date:"M d, Y" }}
+                                <br>
+                                <small class="text-muted">{{ grade.exam_date|timesince }} ago</small>
+                            </td>
+                            <td>
+                                {% if grade.grade in 'ABCDE' %}
+                                <span class="badge bg-success">Pass</span>
+                                {% else %}
+                                <span class="badge bg-danger">Fail</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="#" class="btn btn-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                                    <h4>No Grade Records Found</h4>
+                                    <p class="text-muted">No grades have been recorded yet.</p>
+                                    <a href="{% url 'grade_create' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add First Grade
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade Summary -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Total Grades</h6>
+                            <h2 class="card-title">{{ grades|length }}</h2>
+                        </div>
+                        <i class="fas fa-list-ol fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-gradient-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Pass Rate</h6>
+                            <h2 class="card-title">
+                                {% with passed=grades|dictsort:"grade"|last %}
+                                {{ passed }}
+                                {% endwith %}%
+                            </h2>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-gradient-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Average Grade</h6>
+                            <h2 class="card-title">B+</h2>
+                        </div>
+                        <i class="fas fa-chart-line fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-gradient-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Top Performer</h6>
+                            <h6 class="card-title">John Smith</h6>
+                        </div>
+                        <i class="fas fa-trophy fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade Distribution -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-chart-pie"></i> Grade Distribution
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <canvas id="gradeDistributionChart" height="250"></canvas>
+                </div>
+                <div class="col-md-4">
+                    <div class="grade-legend">
+                        <div class="legend-item">
+                            <span class="legend-color bg-success"></span>
+                            <span class="legend-label">Grade A (90-100%)</span>
+                            <span class="legend-value">25%</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color bg-info"></span>
+                            <span class="legend-label">Grade B (80-89%)</span>
+                            <span class="legend-value">35%</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color bg-primary"></span>
+                            <span class="legend-label">Grade C (70-79%)</span>
+                            <span class="legend-value">20%</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color bg-warning"></span>
+                            <span class="legend-label">Grade D (60-69%)</span>
+                            <span class="legend-value">15%</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color bg-orange"></span>
+                            <span class="legend-label">Grade E (50-59%)</span>
+                            <span class="legend-value">3%</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color bg-danger"></span>
+                            <span class="legend-label">Grade F (Below 50%)</span>
+                            <span class="legend-value">2%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grade Scale Modal -->
+<div class="modal fade" id="gradeScaleModal" tabindex="-1" aria-labelledby="gradeScaleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gradeScaleModalLabel">
+                    <i class="fas fa-balance-scale"></i> Grade Scale
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Grade</th>
+                                <th>Percentage</th>
+                                <th>Description</th>
+                                <th>GPA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-success">
+                                <td><strong>A</strong></td>
+                                <td>90% - 100%</td>
+                                <td>Excellent</td>
+                                <td>4.0</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td><strong>B</strong></td>
+                                <td>80% - 89%</td>
+                                <td>Good</td>
+                                <td>3.0</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td><strong>C</strong></td>
+                                <td>70% - 79%</td>
+                                <td>Satisfactory</td>
+                                <td>2.0</td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td><strong>D</strong></td>
+                                <td>60% - 69%</td>
+                                <td>Pass</td>
+                                <td>1.0</td>
+                            </tr>
+                            <tr class="table-orange">
+                                <td><strong>E</strong></td>
+                                <td>50% - 59%</td>
+                                <td>Marginal</td>
+                                <td>0.5</td>
+                            </tr>
+                            <tr class="table-danger">
+                                <td><strong>F</strong></td>
+                                <td>Below 50%</td>
+                                <td>Fail</td>
+                                <td>0.0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Students must achieve at least 50% to pass a course.
+                    Grades are automatically calculated based on the percentage.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Modal -->
+<div class="modal fade" id="statisticsModal" tabindex="-1" aria-labelledby="statisticsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statisticsModalLabel">
+                    <i class="fas fa-chart-pie"></i> Grade Statistics
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Performance by Course</h6>
+                        <canvas id="coursePerformanceChart" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Semester Comparison</h6>
+                        <canvas id="semesterComparisonChart" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h6>Key Metrics</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="metric-box">
+                                    <div class="metric-value">85.6%</div>
+                                    <div class="metric-label">Average Score</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-box">
+                                    <div class="metric-value">92%</div>
+                                    <div class="metric-label">Pass Rate</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-box">
+                                    <div class="metric-value">3.2</div>
+                                    <div class="metric-label">Average GPA</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-box">
+                                    <div class="metric-value">15</div>
+                                    <div class="metric-label">Distinctions</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Export Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+
+.table-orange {
+    background-color: rgba(253, 126, 20, 0.1);
+}
+
+.grade-legend {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.legend-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+.legend-label {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.legend-value {
+    font-weight: bold;
+    color: #5a5c69;
+}
+
+.metric-box {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e3e6f0;
+}
+
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #4e73df;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Grade Distribution Chart
+const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
+const gradeChart = new Chart(gradeCtx, {
+    type: 'pie',
+    data: {
+        labels: ['A (90-100%)', 'B (80-89%)', 'C (70-79%)', 'D (60-69%)', 'E (50-59%)', 'F (<50%)'],
+        datasets: [{
+            data: [25, 35, 20, 15, 3, 2],
+            backgroundColor: [
+                '#1cc88a',
+                '#36b9cc',
+                '#4e73df',
+                '#f6c23e',
+                '#fd7e14',
+                '#e74a3b'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return `${context.label}: ${context.raw}%`;
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Course Performance Chart
+const courseCtx = document.getElementById('coursePerformanceChart').getContext('2d');
+const courseChart = new Chart(courseCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Math 101', 'Physics 101', 'Chemistry 101', 'Biology 101', 'Computer Science'],
+        datasets: [{
+            label: 'Average Score',
+            data: [85, 78, 92, 88, 95],
+            backgroundColor: '#4e73df',
+            borderColor: '#2e59d9',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                    display: true,
+                    text: 'Percentage (%)'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Semester Comparison Chart
+const semesterCtx = document.getElementById('semesterComparisonChart').getContext('2d');
+const semesterChart = new Chart(semesterCtx, {
+    type: 'line',
+    data: {
+        labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+        datasets: [{
+            label: 'Average Grade',
+            data: [78, 82, 85, 88],
+            borderColor: '#1cc88a',
+            backgroundColor: 'rgba(28, 200, 138, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                    display: true,
+                    text: 'Percentage (%)'
+                }
+            }
+        }
+    }
+});
+
+// Search functionality
+const searchInput = document.querySelector('input[type="text"]');
+searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Grade filtering
+document.querySelectorAll('select').forEach(select => {
+    select.addEventListener('change', filterGrades);
+});
+
+function filterGrades() {
+    // In a real application, this would filter the grades
+    console.log('Filtering grades...');
+}
+</script>
+{% endblock %}
